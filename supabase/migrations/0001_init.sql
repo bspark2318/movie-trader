@@ -45,9 +45,10 @@ create table if not exists runs (
   features_json jsonb not null default '{}',
   started_at timestamptz not null default now()
 );
--- Run identity: one run per market per day (idempotent re-trigger resumes it).
+-- Run identity: one run per market per UTC day (idempotent re-trigger resumes it).
+-- AT TIME ZONE 'UTC' makes the expression IMMUTABLE (plain date() is not).
 create unique index if not exists runs_market_day
-  on runs (market_id, (date(started_at)));
+  on runs (market_id, ((started_at at time zone 'UTC')::date));
 
 -- 3x3 matrix: `agent` holds the method name (comps_quant | tracking_interpreter
 -- | demand_signals | consensus), `model` holds the provider seat.
