@@ -1,0 +1,12 @@
+[
+  { "name": "New York", "lat": 40.7128, "lon": -74.006 },
+  { "name": "Los Angeles", "lat": 34.0522, "lon": -118.2437 },
+  { "name": "Chicago", "lat": 41.8781, "lon": -87.6298 },
+  { "name": "Dallas", "lat": 32.7767, "lon": -96.797 },
+  { "name": "Houston", "lat": 29.7604, "lon": -95.3698 },
+  { "name": "Washington DC", "lat": 38.9072, "lon": -77.0369 },
+  { "name": "Philadelphia", "lat": 39.9526, "lon": -75.1652 },
+  { "name": "Atlanta", "lat": 33.749, "lon": -84.388 },
+  { "name": "Boston", "lat": 42.3601, "lon": -71.0589 },
+  { "name": "San Francisco", "lat": 37.7749, "lon": -122.4194 }
+]

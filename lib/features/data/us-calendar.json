@@ -1,0 +1,52 @@
+{
+  "holidays": [
+    { "date": "2025-01-01", "name": "New Year's Day", "fourDayWeekend": false },
+    { "date": "2025-01-20", "name": "MLK Jr. Day", "fourDayWeekend": true },
+    { "date": "2025-02-17", "name": "Presidents' Day", "fourDayWeekend": true },
+    { "date": "2025-05-11", "name": "Mother's Day", "fourDayWeekend": false },
+    { "date": "2025-05-26", "name": "Memorial Day", "fourDayWeekend": true },
+    { "date": "2025-06-15", "name": "Father's Day", "fourDayWeekend": false },
+    { "date": "2025-06-19", "name": "Juneteenth", "fourDayWeekend": false },
+    { "date": "2025-07-04", "name": "Independence Day", "fourDayWeekend": true },
+    { "date": "2025-09-01", "name": "Labor Day", "fourDayWeekend": true },
+    { "date": "2025-10-13", "name": "Columbus/Indigenous Peoples' Day", "fourDayWeekend": true },
+    { "date": "2025-11-11", "name": "Veterans Day", "fourDayWeekend": false },
+    { "date": "2025-11-27", "name": "Thanksgiving", "fourDayWeekend": true },
+    { "date": "2025-12-25", "name": "Christmas", "fourDayWeekend": false },
+
+    { "date": "2026-01-01", "name": "New Year's Day", "fourDayWeekend": false },
+    { "date": "2026-01-19", "name": "MLK Jr. Day", "fourDayWeekend": true },
+    { "date": "2026-02-16", "name": "Presidents' Day", "fourDayWeekend": true },
+    { "date": "2026-05-10", "name": "Mother's Day", "fourDayWeekend": false },
+    { "date": "2026-05-25", "name": "Memorial Day", "fourDayWeekend": true },
+    { "date": "2026-06-19", "name": "Juneteenth", "fourDayWeekend": false },
+    { "date": "2026-06-21", "name": "Father's Day", "fourDayWeekend": false },
+    { "date": "2026-07-04", "name": "Independence Day", "fourDayWeekend": true },
+    { "date": "2026-09-07", "name": "Labor Day", "fourDayWeekend": true },
+    { "date": "2026-10-12", "name": "Columbus/Indigenous Peoples' Day", "fourDayWeekend": true },
+    { "date": "2026-11-11", "name": "Veterans Day", "fourDayWeekend": false },
+    { "date": "2026-11-26", "name": "Thanksgiving", "fourDayWeekend": true },
+    { "date": "2026-12-25", "name": "Christmas", "fourDayWeekend": false },
+
+    { "date": "2027-01-01", "name": "New Year's Day", "fourDayWeekend": false },
+    { "date": "2027-01-18", "name": "MLK Jr. Day", "fourDayWeekend": true },
+    { "date": "2027-02-15", "name": "Presidents' Day", "fourDayWeekend": true },
+    { "date": "2027-05-09", "name": "Mother's Day", "fourDayWeekend": false },
+    { "date": "2027-05-31", "name": "Memorial Day", "fourDayWeekend": true },
+    { "date": "2027-06-19", "name": "Juneteenth", "fourDayWeekend": false },
+    { "date": "2027-06-20", "name": "Father's Day", "fourDayWeekend": false },
+    { "date": "2027-07-04", "name": "Independence Day", "fourDayWeekend": true },
+    { "date": "2027-09-06", "name": "Labor Day", "fourDayWeekend": true },
+    { "date": "2027-11-25", "name": "Thanksgiving", "fourDayWeekend": true },
+    { "date": "2027-12-25", "name": "Christmas", "fourDayWeekend": false }
+  ],
+  "schoolBreaks": [
+    { "start": "2025-06-09", "end": "2025-08-25", "status": "summer" },
+    { "start": "2025-12-20", "end": "2026-01-04", "status": "winter-break" },
+    { "start": "2026-03-09", "end": "2026-04-12", "status": "spring-break" },
+    { "start": "2026-06-08", "end": "2026-08-24", "status": "summer" },
+    { "start": "2026-12-19", "end": "2027-01-03", "status": "winter-break" },
+    { "start": "2027-03-08", "end": "2027-04-11", "status": "spring-break" },
+    { "start": "2027-06-07", "end": "2027-08-23", "status": "summer" }
+  ]
+}
