@@ -68,7 +68,7 @@ export async function buildFeatures(ev: BoxOfficeEvent): Promise<FeaturesJson> {
   }
 
   // Release schedule: find this movie + same-weekend wide releases.
-  let release: ReleaseFeature = {
+  const release: ReleaseFeature = {
     releaseDate: null,
     daysUntilRelease: null,
     plannedTheaters: null,
