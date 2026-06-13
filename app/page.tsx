@@ -3,7 +3,8 @@ import { fetchBoxOfficeEvents } from "@/lib/polymarket/gamma";
 import { hasDb } from "@/lib/config";
 import { BracketTable } from "@/components/BracketTable";
 
-export const revalidate = 60;
+// Dynamic so DB-connection status and live prices reflect runtime, not build time.
+export const dynamic = "force-dynamic";
 
 export default async function Home() {
   let events;
