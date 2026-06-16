@@ -67,6 +67,9 @@ export interface RunCellResult {
  * unrestricted web search. Validates the strict-JSON output, retrying ONCE with
  * the validation error appended if the first response is malformed.
  */
+// TODO(cost): a Batch API path (~50% cheaper, async ≤24h) fits the Mon/Thu
+// scheduled cadence — submit/poll across separate cron invocations, state in DB.
+// Skipped for now: cheap models already make a run ~$0.40, so batch saves ~$1.50/mo.
 export async function runCell(p: RunCellParams): Promise<RunCellResult> {
   const handle = providerHandle(p.provider);
   const model = handle.model(p.modelId);

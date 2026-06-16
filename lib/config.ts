@@ -9,7 +9,9 @@ const envSchema = z.object({
   OPENWEATHER_API_KEY: z.string().optional(),
   CRON_SECRET: z.string().optional(),
   // Per-provider model overrides — any agent seat can run any model.
-  MODEL_ANTHROPIC: z.string().default("claude-opus-4-8"),
+  // Default: balanced "strong" tier (~$1.50/run). Drop to the cheap tier
+  // (claude-haiku-4-5 / gpt-5.4-mini / gemini-2.5-flash) for ~$0.40/run.
+  MODEL_ANTHROPIC: z.string().default("claude-sonnet-4-6"),
   MODEL_OPENAI: z.string().default("gpt-5.1"),
   MODEL_GOOGLE: z.string().default("gemini-2.5-pro"),
   RUN_MODE: z.enum(["manual", "auto"]).default("manual"),
