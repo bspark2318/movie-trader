@@ -1,0 +1,72 @@
+name: trader
+
+# Free automation: each job runs the heavy work inside the Actions runner
+# (6h limit) instead of a Vercel function. Schedules mirror vercel.json.
+#   snapshot  daily 13:00 UTC  — Polymarket price snapshots (cheap, no LLM)
+#   run       Mon/Thu 13:30    — one 12-call ensemble run (~$1.50)
+#   resolve   daily 14:00 UTC  — score markets past their end date
+# UTC only; GitHub may delay scheduled runs a few minutes under load.
+
+on:
+  schedule:
+    - cron: "0 13 * * *"      # snapshot
+    - cron: "30 13 * * 1,4"   # run
+    - cron: "0 14 * * *"      # resolve
+  workflow_dispatch:
+    inputs:
+      job:
+        description: Which job to run manually
+        type: choice
+        options: [snapshot, run, resolve]
+        default: run
+
+concurrency:
+  group: trader
+  cancel-in-progress: false
+
+jobs:
+  snapshot:
+    if: github.event.schedule == '0 13 * * *' || inputs.job == 'snapshot'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: npm }
+      - run: npm ci
+      - run: npm run cron snapshot
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+
+  run:
+    if: github.event.schedule == '30 13 * * 1,4' || inputs.job == 'run'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: npm }
+      - run: npm ci
+      - run: npm run cron run
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          # Models default to the strong tier in lib/config.ts (Sonnet/GPT-5.1/
+          # Gemini-Pro). To override, add a line here, e.g.
+          #   MODEL_ANTHROPIC: claude-haiku-4-5  # cheap tier ~$0.40/run
+
+  resolve:
+    if: github.event.schedule == '0 14 * * *' || inputs.job == 'resolve'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: npm }
+      - run: npm ci
+      - run: npm run cron resolve
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
