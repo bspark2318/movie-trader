@@ -36,6 +36,9 @@ export interface RunRow {
   market_id: string;
   features_json: Record<string, unknown>;
   started_at: string;
+  cost_usd?: number;
+  input_tokens?: number;
+  output_tokens?: number;
 }
 
 export interface AgentOutputRow {
@@ -60,6 +63,7 @@ export interface RecommendationRow {
   ensemble_prob: number;
   edge_pts: number;
   gate_results: Record<string, unknown>;
+  gate_passed?: boolean;
   status: "open" | "won" | "lost";
   created_at: string;
 }

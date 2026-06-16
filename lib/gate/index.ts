@@ -4,13 +4,21 @@ import { maxPairwiseDisagreement } from "@/lib/runs/consensus";
 import { evPerShare, quarterKelly } from "@/lib/sizing/kelly";
 import type { RunResult } from "@/lib/runs/orchestrator";
 import { getSupabase } from "@/lib/db/client";
+import { learningActive } from "@/lib/learn";
+import { learnedGateThresholds } from "@/lib/learn/gate-tuning";
 
-// Gate thresholds (probability points are 0..1 internally, expressed in pts in UI).
+// Default gate thresholds (probability points 0..1; shown as pts in UI). The
+// agreement/edge pair can be overridden by the self-tuning learner.
 const AGREEMENT_MAX = 0.05; // ≤5 pts pairwise on the candidate bracket
 const EDGE_MIN = 0.08; // ≥8 pts vs executable price
 const LIQUIDITY_MIN = 100; // ≥ $100 depth
 const SPREAD_MAX = 0.04; // ≤4 pts
 const HOURS_MIN = 24; // > 24h to resolution
+
+export interface GateOverrides {
+  edgeMin?: number;
+  agreementMax?: number;
+}
 
 export interface GateChecks {
   agreement: { pass: boolean; maxPairwiseDisagreementPts: number };
@@ -43,7 +51,10 @@ export function evaluateGate(
   ev: BoxOfficeEvent,
   ensemble: Record<string, number>,
   consensusOutputs: AgentOutput[],
+  overrides: GateOverrides = {},
 ): GateResult {
+  const agreementMax = overrides.agreementMax ?? AGREEMENT_MAX;
+  const edgeMin = overrides.edgeMin ?? EDGE_MIN;
   const byLabel = new Map<string, Bracket>(ev.brackets.map((b) => [b.label, b]));
 
   // Find the bracket with the largest positive YES edge against bestAsk.
@@ -66,11 +77,11 @@ export function evaluateGate(
 
   const checks: GateChecks = {
     agreement: {
-      pass: disagreement <= AGREEMENT_MAX,
+      pass: disagreement <= agreementMax,
       maxPairwiseDisagreementPts: Math.round(disagreement * 100),
     },
     edge: {
-      pass: (best?.edge ?? 0) >= EDGE_MIN,
+      pass: (best?.edge ?? 0) >= edgeMin,
       edgePts: Math.round((best?.edge ?? 0) * 100),
     },
     liquidity: {
@@ -93,41 +104,58 @@ export function evaluateGate(
     checks.liquidity.pass &&
     checks.timing.pass;
 
-  const candidate =
-    best && emit
-      ? {
-          bracketLabel: best.bracket.label,
-          side: "buy_yes" as const,
-          execPrice: best.bracket.bestAsk,
-          ensembleProb: best.prob,
-          edgePts: Math.round(best.edge * 100),
-          evPerShare: Number(evPerShare(best.prob, best.bracket.bestAsk).toFixed(4)),
-          quarterKellyFraction: Number(
-            quarterKelly(best.prob, best.bracket.bestAsk).toFixed(4),
-          ),
-          dissent:
-            disagreement > 0.02
-              ? `Models disagree by ${Math.round(disagreement * 100)} pts on this bracket.`
-              : "Models broadly agree.",
-        }
-      : null;
+  // Candidate is always populated (the best value pick) so every run can log a
+  // paper trade; `emit` separately says whether it cleared the strict gate.
+  const candidate = best
+    ? {
+        bracketLabel: best.bracket.label,
+        side: "buy_yes" as const,
+        execPrice: best.bracket.bestAsk,
+        ensembleProb: best.prob,
+        edgePts: Math.round(best.edge * 100),
+        evPerShare: Number(evPerShare(best.prob, best.bracket.bestAsk).toFixed(4)),
+        quarterKellyFraction: Number(
+          quarterKelly(best.prob, best.bracket.bestAsk).toFixed(4),
+        ),
+        dissent:
+          disagreement > 0.02
+            ? `Models disagree by ${Math.round(disagreement * 100)} pts on this bracket.`
+            : "Models broadly agree.",
+      }
+    : null;
 
   return { emit, candidate, checks };
 }
 
 /**
- * Evaluate the gate for a completed run and persist a recommendation row only
- * when it emits. Gate diagnostics for NO-BET runs are recomputed on demand.
+ * Evaluate the gate for a completed run and log a paper trade for EVERY run —
+ * the ensemble's best value pick — tagged with whether it also cleared the
+ * strict gate (`gate_passed`). One trade per run (idempotent on run_id).
  */
 export async function evaluateAndPersistGate(
   ev: BoxOfficeEvent,
   run: RunResult,
 ): Promise<GateResult> {
-  const gate = evaluateGate(ev, run.ensemble, Object.values(run.consensus));
-  if (!gate.emit || !gate.candidate) return gate;
+  // Self-tuned thresholds once enough trades have resolved, else the defaults.
+  const tuned = (await learningActive()) ? await learnedGateThresholds() : null;
+  const gate = evaluateGate(
+    ev,
+    run.ensemble,
+    Object.values(run.consensus),
+    tuned ?? {},
+  );
+  if (!gate.candidate) return gate;
 
   const db = getSupabase();
   if (!db) return gate;
+
+  // One paper trade per run.
+  const { data: existing } = await db
+    .from("recommendations")
+    .select("id")
+    .eq("run_id", run.runId)
+    .maybeSingle<{ id: string }>();
+  if (existing) return gate;
 
   // Find the bracket_id for the candidate label.
   const { data: bracketRow } = await db
@@ -146,6 +174,7 @@ export async function evaluateAndPersistGate(
     ensemble_prob: gate.candidate.ensembleProb,
     edge_pts: gate.candidate.edgePts,
     gate_results: gate.checks as unknown as Record<string, unknown>,
+    gate_passed: gate.emit,
     status: "open",
   });
 

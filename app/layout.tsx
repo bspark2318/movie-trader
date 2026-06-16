@@ -35,8 +35,20 @@ export default function RootLayout({
             <Link href="/" className="font-semibold">
               🎬 movie-trader
             </Link>
+            <Link href="/live" className="text-zinc-600 hover:text-zinc-900">
+              Live
+            </Link>
             <Link href="/runs" className="text-zinc-600 hover:text-zinc-900">
               Runs
+            </Link>
+            <Link href="/backtest" className="text-zinc-600 hover:text-zinc-900">
+              Backtest
+            </Link>
+            <Link
+              href="/portfolio"
+              className="text-zinc-600 hover:text-zinc-900"
+            >
+              Portfolio
             </Link>
             <Link
               href="/calibration"

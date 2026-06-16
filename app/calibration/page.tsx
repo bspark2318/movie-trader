@@ -1,6 +1,9 @@
 import { hasDb } from "@/lib/config";
 import { buildCalibration } from "@/lib/scoring/calibration";
 import { CalibrationCurve } from "@/components/CalibrationCurve";
+import { MIN_SAMPLE } from "@/lib/learn";
+import { learnedGateThresholds } from "@/lib/learn/gate-tuning";
+import { loadCalibrationMapping } from "@/lib/learn/calibration";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +17,26 @@ const KEY_LABELS: Record<string, string> = {
   "model:openai": "GPT seat",
   "model:google": "Gemini seat",
 };
+
+function LeverRow({
+  name,
+  on,
+  detail,
+}: {
+  name: string;
+  on: boolean;
+  detail: string;
+}) {
+  return (
+    <div className="flex items-center justify-between border-t border-zinc-100 py-1.5 first:border-t-0">
+      <span>
+        <span className={on ? "text-emerald-600" : "text-zinc-300"}>●</span>{" "}
+        {name}
+      </span>
+      <span className="font-mono text-xs text-zinc-500">{detail}</span>
+    </div>
+  );
+}
 
 export default async function CalibrationPage() {
   if (!hasDb()) {
@@ -29,6 +52,9 @@ export default async function CalibrationPage() {
   }
 
   const cal = await buildCalibration();
+  const learningOn = cal.resolvedMarkets >= MIN_SAMPLE;
+  const tuned = learningOn ? await learnedGateThresholds() : null;
+  const calBins = learningOn ? (await loadCalibrationMapping()).length : 0;
 
   return (
     <div className="space-y-6">
@@ -58,6 +84,59 @@ export default async function CalibrationPage() {
         {cal.goNoGo === "no-go" &&
           "NO-GO — the ensemble has not beaten the market. Stay on paper. This is a valid finding."}
       </div>
+
+      {/* Self-improvement status */}
+      <section className="rounded-lg border border-zinc-200 p-4">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-sm font-medium uppercase tracking-wide text-zinc-500">
+            Self-improvement
+          </h2>
+          <span
+            className={`rounded px-2 py-0.5 text-xs font-medium ${
+              learningOn
+                ? "bg-emerald-50 text-emerald-700"
+                : "bg-zinc-100 text-zinc-500"
+            }`}
+          >
+            {learningOn
+              ? "ACTIVE"
+              : `warming up · ${cal.resolvedMarkets}/${MIN_SAMPLE}`}
+          </span>
+        </div>
+        <p className="mb-3 text-xs text-zinc-500">
+          Each lever stays on static defaults until {MIN_SAMPLE} markets resolve,
+          so it can&apos;t tune itself on noise.
+        </p>
+        <div className="space-y-1.5 text-sm">
+          <LeverRow
+            name="Performance-weighted ensemble"
+            on={learningOn}
+            detail={
+              learningOn
+                ? "weighting seats by track-record Brier"
+                : "equal weights (median)"
+            }
+          />
+          <LeverRow
+            name="Calibration layer"
+            on={learningOn && calBins > 0}
+            detail={
+              learningOn && calBins > 0
+                ? `${calBins} reliability bins applied`
+                : "identity (no correction)"
+            }
+          />
+          <LeverRow
+            name="Self-tuning gate"
+            on={learningOn && tuned !== null}
+            detail={
+              tuned
+                ? `edge ≥ ${Math.round(tuned.edgeMin * 100)}pts · agree ≤ ${Math.round(tuned.agreementMax * 100)}pts (learned)`
+                : "edge ≥ 8pts · agree ≤ 5pts (default)"
+            }
+          />
+        </div>
+      </section>
 
       <section className="rounded-lg border border-zinc-200 p-4">
         <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-zinc-500">

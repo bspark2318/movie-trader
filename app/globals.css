@@ -12,15 +12,14 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* This is a light-themed dashboard — pin it so OS dark mode doesn't wash out
+   text. (Tailwind v4 layers utilities below this unlayered body rule, so a
+   dark --foreground here would override text-zinc-* and grey everything out.) */
+:root {
+  color-scheme: light;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
 }

@@ -60,6 +60,40 @@ export async function latestRunWithOutputs(
   return { run, outputs };
 }
 
+/**
+ * Persist estimated model cost for a completed run. Tolerant of the 0003
+ * migration not being applied yet — a missing column just means cost isn't
+ * stored, never a failed run.
+ */
+export async function saveRunCost(
+  runId: string,
+  cost: { costUsd: number; inputTokens: number; outputTokens: number },
+): Promise<void> {
+  const db = getSupabase();
+  if (!db) return;
+  const { error } = await db
+    .from("runs")
+    .update({
+      cost_usd: cost.costUsd,
+      input_tokens: cost.inputTokens,
+      output_tokens: cost.outputTokens,
+    })
+    .eq("id", runId);
+  if (error) console.warn(`saveRunCost skipped: ${error.message}`);
+}
+
+/** Cumulative estimated model spend across all runs (0 if column absent). */
+export async function totalRunCost(): Promise<number> {
+  const db = getSupabase();
+  if (!db) return 0;
+  const { data, error } = await db.from("runs").select("cost_usd");
+  if (error) return 0;
+  return (data ?? []).reduce(
+    (a, r) => a + Number((r as { cost_usd?: number }).cost_usd ?? 0),
+    0,
+  );
+}
+
 export async function saveAgentOutput(params: {
   runId: string;
   agent: string;

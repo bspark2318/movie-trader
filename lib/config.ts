@@ -14,6 +14,8 @@ const envSchema = z.object({
   MODEL_GOOGLE: z.string().default("gemini-2.5-pro"),
   RUN_MODE: z.enum(["manual", "auto"]).default("manual"),
   AUTO_RUN_WINDOW_DAYS: z.coerce.number().int().positive().default(7),
+  // Paper-trading: notional starting bankroll for the P&L ledger (no real money).
+  PAPER_BANKROLL: z.coerce.number().positive().default(1000),
 });
 
 export type Env = z.infer<typeof envSchema>;
